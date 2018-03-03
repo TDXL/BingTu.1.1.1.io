@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        canvas {
+            border:1px solid red;
+        }
+
+    </style>
+</head>
+<body>
+    <canvas width="600" height="400">升级浏览器</canvas>
+    <script>
+        // 获取canvas 画笔
+        // var canvas = document.querySelector("canvas");
+        // var context = canvas.getContext('2d');
+        var data = [
+            {
+                title:'0-10岁',
+                num:12
+            },
+            {
+                title:'10-25岁',
+                num:30
+            },
+            {
+                title:'25-30岁',
+                num:22
+            },
+            {
+                title:'30-35岁',
+                num:10
+            },
+            {
+                title:'35-100岁',
+                num:12
+            }
+        ];
+        // 设置属性
+        var PiChart = function(){
+            this.canvas = document.querySelector("canvas");
+            this.context = this.canvas.getContext('2d');
+            this.cWidth = this.canvas.width;
+            this.cHeight = this.canvas.height;
+            this.zeroX = this.cWidth/2 + 50;
+            this.zeroY = this.cHeight/2;
+            this.radius = 150;
+            // 延长线的长度
+            this.outline = 20;
+            this.rectWidth = 30;
+            this.rectHeight = 15;
+            this.space = 20;
+        }
+         // 创建一个产生随机颜色的方法
+        PiChart.prototype.getRandomColor = function(){
+            var r = Math.floor(Math.random()*256);
+            var g = Math.floor(Math.random()*256);
+            var b = Math.floor(Math.random()*256);
+            return 'rgb('+r+','+g+','+b+')';
+        }
+        // 转换变量
+        PiChart.prototype.transformData = function(data){
+            var sum = 0;
+            data.forEach(function(item,index){
+                sum += item.num;
+            })
+            var transformArray = [];
+            data.forEach(function(item,index){
+                transformArray.push({
+                    title:item.title,
+                    num:item.mum,
+                    angle:item.num/sum*2*Math.PI
+                })
+            })
+            return transformArray;
+             
+        }
+        // 画饼图
+        PiChart.prototype.drawPi = function(data){
+            var _this = this;
+            var startAngle = 0;
+            var resultData = this.transformData(data);
+            resultData.forEach(function(item,index){
+                _this.context.beginPath();
+                _this.context.moveTo(_this.zeroX,_this.zeroY);
+                _this.context.arc(_this.zeroX,_this.zeroY,_this.radius,startAngle,startAngle+item.angle);
+                _this.context.closePath();
+                var color = _this.context.fillStyle = _this.getRandomColor();
+                _this.context.fill();
+                // _this.context.stroke();
+                _this.drawRect(color,index,item.title);
+                _this.drawTitle(item.title,color,index,startAngle,item.angle);
+                startAngle+=item.angle;
+            })
+        }
+        // 画说明描述
+        PiChart.prototype.drawRect = function(color,index,title){
+            console.log('drawRect',color,index,title);
+            this.context.beginPath();
+            this.context.fillStyle = color;
+            this.context.fillRect(this.space,this.space+index*(this.rectHeight+10),this.rectWidth,this.rectHeight);
+            // console.log(this.space,this.space+index*(this.rectHeight)+10,this.rectWidth,this.rectHeight);
+            // 画文字
+            this.context.beginPath();
+            this.context.textBaseline = 'top';
+            this.context.textAlign = 'left';
+            this.context.fillText(title,this.space+this.rectWidth+10,this.space+index*(this.rectHeight+10));
+        }
+        // 画标题
+        PiChart.prototype.drawTitle = function(title,color,index,startAngle,angle){
+            console.log('drawTitle',title,color,index,startAngle,angle);
+            // 求斜边长
+            var edge = this.radius+this.outline;
+            // 求x轴长度
+            var edgeX = Math.cos(startAngle+angle/2)*edge;
+            // 求y轴长度
+            var edgeY = Math.sin(startAngle+angle/2)*edge;
+            // 求拐点的坐标
+            var outX = this.zeroX + edgeX;
+            var outY = this.zeroY + edgeY;
+            this.context.beginPath();
+            this.context.moveTo(this.zeroX,this.zeroY);
+            this.context.lineTo(outX,outY);
+            // console.log(this.zeroX,this.zeroY,outX,outY)
+            // this.context.stroke();
+            // 获取文字宽度
+            var textWidth = this.context.measureText(title).width;
+            // 判断zeroX和outX大小
+            if(this.zeroX>outX){
+                this.context.lineTo(outX-textWidth,outY);
+                this.context.textAlign = 'right';
+            }else{
+                this.context.lineTo(outX+textWidth,outY);
+                this.context.textAlign = 'left';
+            }
+            this.context.strokeStyle = color;
+            this.context.textBaseline = 'bottom';
+            this.context.fillText(title,outX,outY);
+            this.context.stroke();
+
+        }
+
+        new PiChart().drawPi(data);
+    </script>
+</body>
+</html>
